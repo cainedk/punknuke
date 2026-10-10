@@ -1,0 +1,267 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PunkNuke</title>
+<meta name="description" content="A wearable offline survival-knowledge node for a cyberpunk cosplay: a Raspberry Pi 5 hotspot with a captive portal, offline library and netrunner toolkit. Built together with Claude.">
+<meta name="theme-color" content="#0b0d1c">
+<meta property="og:title" content="PunkNuke">
+<meta property="og:description" content="A wearable offline survival-knowledge node for a cyberpunk cosplay. Built together with Claude.">
+<meta property="og:image" content="img/logo.jpg">
+<link rel="icon" href="img/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="img/favicon-32.png">
+<link rel="apple-touch-icon" href="img/apple-touch-icon.png">
+<style>
+:root{
+  --void:#0b0d1c; --panel:#13162b; --line:#262a48;
+  --amber:#ffa733; --pink:#ff3dbb; --cyan:#3ef0ff; --dim:#8a8fb0; --text:#e3e6f5;
+  --mono:ui-monospace,"SF Mono",Menlo,Consolas,"Roboto Mono","Liberation Mono",monospace;
+  --cond:"Roboto Condensed","Arial Narrow","sans-serif-condensed","Helvetica Neue",Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{background:var(--void); -webkit-text-size-adjust:100%; text-size-adjust:100%; scroll-behavior:smooth}
+html,body{overflow-x:hidden; max-width:100%}
+body{margin:0; color:var(--text); font-family:var(--mono); font-size:15px; line-height:1.6; background:var(--void)}
+body::after{content:""; position:fixed; inset:0; pointer-events:none; z-index:10;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.022) 0 1px,transparent 1px 3px)}
+a{color:var(--cyan)}
+:focus-visible{outline:2px solid var(--pink); outline-offset:3px}
+img{max-width:100%; height:auto; display:block}
+.wrap{max-width:1080px; margin:0 auto; padding:0 20px}
+
+/* hero */
+.hero{position:relative; padding:56px 0 40px; border-bottom:1px solid var(--line); overflow:hidden}
+.hero .wrap{display:grid; grid-template-columns:minmax(0,1fr); gap:28px; align-items:center}
+@media (min-width:860px){ .hero .wrap{grid-template-columns:minmax(0,420px) minmax(0,1fr)} }
+.logo{position:relative; justify-self:center; width:min(100%,420px)}
+.logo::before{content:""; position:absolute; inset:8%; border-radius:50%;
+  background:radial-gradient(circle, rgba(62,240,255,.25), rgba(255,61,187,.14) 45%, transparent 70%);
+  filter:blur(8px); animation:glow 5s ease-in-out infinite}
+.logo img{position:relative; -webkit-mask-image:radial-gradient(ellipse at center,#000 58%,transparent 74%);
+  mask-image:radial-gradient(ellipse at center,#000 58%,transparent 74%)}
+.kicker{color:var(--pink); font-size:13px; margin:0 0 10px}
+.kicker::before{content:""; display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--pink);
+  box-shadow:0 0 8px var(--pink); margin-right:8px; vertical-align:middle; animation:blink 2s infinite}
+h1{font-family:var(--cond); font-stretch:condensed; font-weight:800; font-size:clamp(2.4rem,7vw,4.2rem); line-height:.95;
+  margin:0 0 16px; letter-spacing:-.01em}
+.lead{font-size:16px; max-width:56ch; margin:0 0 24px; color:var(--text)}
+.ctas{display:flex; gap:10px; flex-wrap:wrap}
+.btn{display:inline-block; text-decoration:none; padding:13px 20px; font-weight:700; border:1px solid var(--cyan)}
+.btn.primary{background:var(--cyan); color:var(--void)}
+.btn.ghost{color:var(--cyan)}
+.btn:hover{filter:brightness(1.15)}
+.claude{margin-top:26px; padding:14px 16px; border:1px solid var(--line); border-left:3px solid var(--amber);
+  background:var(--panel); font-size:14px; max-width:60ch}
+.claude b{color:var(--amber); font-weight:600}
+
+/* sections */
+section{padding:56px 0; border-bottom:1px solid var(--line)}
+h2{font-family:var(--cond); font-stretch:condensed; font-weight:800; font-size:clamp(1.8rem,4.5vw,2.6rem); line-height:1;
+  margin:0 0 10px; color:var(--cyan)}
+.sub{color:var(--dim); margin:0 0 28px; max-width:64ch}
+
+/* connect sequence: a real sequence, so numbered */
+ol.seq{list-style:none; margin:0; padding:0; display:grid; gap:0; grid-template-columns:minmax(0,1fr); counter-reset:s}
+@media (min-width:760px){ ol.seq{grid-template-columns:repeat(4,minmax(0,1fr))} }
+ol.seq li{counter-increment:s; padding:18px 18px 20px; border:1px solid var(--line); margin:-1px 0 0 -1px; position:relative}
+ol.seq li::before{content:counter(s,decimal-leading-zero); display:block; font-family:var(--cond); font-weight:800;
+  font-size:2.2rem; line-height:1; color:var(--amber); margin-bottom:10px}
+ol.seq b{display:block; color:var(--text); margin-bottom:4px}
+ol.seq span{color:var(--dim); font-size:14px}
+
+/* feature codes, in the portal's own vocabulary */
+.codes{display:grid; grid-template-columns:minmax(0,1fr); gap:0 40px}
+@media (min-width:760px){ .codes{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+.code{padding:16px 0; border-top:1px solid var(--line)}
+.code h3{margin:0 0 4px; font-family:var(--cond); font-stretch:condensed; font-weight:800; font-size:1.5rem; line-height:1.1}
+.code p{margin:0; color:var(--dim); font-size:14px}
+.code.m h3{color:var(--cyan)} .code.l h3{color:var(--pink)} .code.t h3{color:var(--cyan)} .code.s h3{color:var(--amber)}
+
+/* screenshots */
+.phones{display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin-bottom:28px}
+@media (max-width:640px){ .phones{grid-template-columns:repeat(3,minmax(0,1fr)); gap:8px} }
+figure{margin:0}
+figure img{border:1px solid var(--line)}
+figcaption{color:var(--dim); font-size:12px; margin-top:8px}
+.wide{display:grid; grid-template-columns:minmax(0,1fr); gap:24px}
+@media (min-width:900px){ .wide{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+
+/* tables & code */
+.scroll{overflow-x:auto; border:1px solid var(--line)}
+table{width:100%; border-collapse:collapse; font-size:14px}
+th,td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--line); vertical-align:top}
+th{color:var(--dim); font-weight:400; font-size:12px; background:var(--panel)}
+pre{margin:0; padding:16px; background:var(--panel); border:1px solid var(--line); border-left:3px solid var(--cyan);
+  overflow-x:auto; font-size:13px; line-height:1.55}
+pre .c{color:var(--dim)}
+.note{color:var(--dim); font-size:13px; margin-top:12px}
+
+/* credits */
+.credit{display:grid; grid-template-columns:minmax(0,1fr); gap:0}
+@media (min-width:760px){ .credit{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} }
+.who{padding:20px; border:1px solid var(--line); margin:-1px 0 0 -1px}
+.who h3{margin:0 0 8px; font-family:var(--cond); font-stretch:condensed; font-weight:800; font-size:1.6rem; line-height:1}
+.who.c h3{color:var(--pink)} .who.a h3{color:var(--amber)}
+.who ul{margin:0; padding-left:18px; color:var(--text); font-size:14px}
+.who li{margin:4px 0}
+
+footer{padding:28px 0 48px; color:var(--dim); font-size:13px}
+footer .wrap{display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap}
+
+@keyframes glow{50%{transform:scale(1.06); opacity:.7}}
+@keyframes blink{50%{opacity:.3}}
+@media (prefers-reduced-motion:reduce){ *{animation:none !important} html{scroll-behavior:auto} }
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="logo"><img src="img/logo.jpg" alt="Punk Nuke logo" width="520" height="500"></div>
+    <div>
+      <p class="kicker">Broadcasting as NEON-NODE</p>
+      <h1>An offline survival archive you can wear.</h1>
+      <p class="lead">PunkNuke is a Raspberry Pi 5 on the back of a cyberpunk plate carrier. It runs its own Wi-Fi, pops up a portal on every phone that joins, and serves medicine, repair, tech and survival knowledge with no internet at all.</p>
+      <div class="ctas">
+        <a class="btn primary" id="repo-link" href="https://github.com/">View the code on GitHub</a>
+        <a class="btn ghost" href="demo/tools/">Try the //TOOLS demo</a>
+      </div>
+      <p class="claude"><b>Built together with Claude.</b> Caine designed and built PunkNuke in collaboration with Claude, Anthropic's AI assistant, through conversations on <a href="https://claude.ai">claude.ai</a>.</p>
+    </div>
+  </div>
+</header>
+
+<main>
+<section id="connect">
+  <div class="wrap">
+    <h2>What happens when you connect</h2>
+    <p class="sub">No app, no password, no mobile data. It works like hotel Wi-Fi, except the login page is the whole point.</p>
+    <ol class="seq">
+      <li><b>Scan the QR code</b><span>The screen on the wearer's back shows a code that joins the NEON-NODE network.</span></li>
+      <li><b>The portal pops up</b><span>Every address resolves to the box, so the phone opens the PunkNuke page by itself.</span></li>
+      <li><b>Search the archive</b><span>Wikipedia, medical references, repair guides and Q&amp;A sites, all served from an SSD in the box.</span></li>
+      <li><b>Take the tools with you</b><span>The toolkit runs on your own phone: Morse, ciphers, converters, radio frequencies.</span></li>
+    </ol>
+  </div>
+</section>
+
+<section id="inside">
+  <div class="wrap">
+    <h2>Inside the node</h2>
+    <p class="sub">The portal sorts everything into sections, named the way the character would.</p>
+    <div class="codes">
+      <div class="code m"><h3>//MED</h3><p>MDWiki and field-medicine manuals: first aid, treatment, drugs.</p></div>
+      <div class="code m"><h3>//REPAIR</h3><p>iFixit guides plus electronics, Arduino, Raspberry Pi and DIY Q&amp;A.</p></div>
+      <div class="code m"><h3>//NETRUN</h3><p>Linux, security and programming references, and freeCodeCamp.</p></div>
+      <div class="code s"><h3>//SURVIVE</h3><p>Water, food, shelter, knots, outdoors and sustainability.</p></div>
+      <div class="code m"><h3>//ARCHIVE</h3><p>Wikipedia, Wikivoyage, Wiktionary, Wikibooks and anything else added later.</p></div>
+      <div class="code t"><h3>//TOOLS</h3><p>Morse with sound and screen flashing, cipher decoder, unit and antenna calculators, radio reference.</p></div>
+      <div class="code l"><h3>//LOLZ</h3><p>An offline comic archive. Survivors need to laugh too.</p></div>
+      <div class="code s"><h3>Admin</h3><p>A password-protected dashboard on a tablet: temperature, drives, input voltage, connected phones, reboot and shutdown.</p></div>
+    </div>
+  </div>
+</section>
+
+<section id="screens">
+  <div class="wrap">
+    <h2>Screens</h2>
+    <p class="sub">Shown with sample data.</p>
+    <div class="phones">
+      <figure><img src="img/portal.jpg" alt="Portal start page with logo and boot log" loading="lazy" width="780" height="1688"><figcaption>The portal on a phone</figcaption></figure>
+      <figure><img src="img/portal-library.jpg" alt="Portal library sections MED, REPAIR and NETRUN" loading="lazy" width="780" height="1688"><figcaption>Library sections</figcaption></figure>
+      <figure><img src="img/tools.jpg" alt="Netrunner toolkit Morse tab" loading="lazy" width="780" height="1688"><figcaption>//TOOLS, Morse tab</figcaption></figure>
+    </div>
+    <div class="wide">
+      <figure><img src="img/backscreen.jpg" alt="Back screen with logo, two QR codes and live stats" loading="lazy" width="1024" height="600"><figcaption>The 7" back screen: display only, so nobody pokes the wearer</figcaption></figure>
+      <figure><img src="img/admin.jpg" alt="Admin dashboard with CPU, memory, drives, power and connected devices" loading="lazy" width="1024" height="700"><figcaption>Admin dashboard on the wearer's tablet</figcaption></figure>
+    </div>
+  </div>
+</section>
+
+<section id="hardware">
+  <div class="wrap">
+    <h2>Hardware</h2>
+    <p class="sub">About 9-15 W before the screen. A 20,000 mAh bank runs it for roughly 4-6 hours.</p>
+    <div class="scroll"><table>
+      <tr><th>Part</th><th>Original build</th></tr>
+      <tr><td>Computer</td><td>Raspberry Pi 5</td></tr>
+      <tr><td>System drive</td><td>256 GB NVMe, Raspberry Pi OS Lite 64-bit</td></tr>
+      <tr><td>Library drive</td><td>480 GB SATA SSD on USB 3</td></tr>
+      <tr><td>Wi-Fi</td><td>Onboard Wi-Fi runs the hotspot</td></tr>
+      <tr><td>Back screen</td><td>7" HDMI display</td></tr>
+      <tr><td>Power</td><td>20,000 mAh powerbanks in MOLLE pouches</td></tr>
+    </table></div>
+  </div>
+</section>
+
+<section id="install">
+  <div class="wrap">
+    <h2>Build your own</h2>
+    <p class="sub">On a fresh Raspberry Pi OS Lite with the library drive mounted at <code>/mnt/data</code>. The README has every step.</p>
+<pre><span class="c"># get the code</span>
+git clone <span id="clone-url">https://github.com/cainedk/punknuke.git</span>
+cd punknuke
+
+<span class="c"># set it up, in this order</span>
+sudo bash scripts/setup-portal.sh wlan0 NEON-NODE
+sudo bash scripts/setup-redirect.sh wlan0
+sudo bash scripts/install-web.sh
+sudo bash scripts/setup-admin.sh
+sudo bash scripts/setup-kiosk.sh    <span class="c"># optional back screen</span>
+sudo bash scripts/setup-comics.sh   <span class="c"># optional //LOLZ</span>
+
+<span class="c"># fill the library in the background</span>
+nohup bash scripts/download-content.sh &gt; ~/download.log 2&gt;&amp;1 &amp;</pre>
+    <p class="note">The hotspot is open and unencrypted by design. Treat it as a public prop, not a private network.</p>
+  </div>
+</section>
+
+<section id="credits">
+  <div class="wrap">
+    <h2>Made by a human and an AI</h2>
+    <p class="sub">PunkNuke was built step by step in one long conversation on claude.ai. Caine ran each command on the Pi and pasted back what happened; Claude adjusted the scripts until everything worked.</p>
+    <div class="credit">
+      <div class="who c">
+        <h3>Caine</h3>
+        <ul>
+          <li>The concept and the cyberpunk character</li>
+          <li>Hardware build and costume integration</li>
+          <li>The PunkNuke logo artwork</li>
+          <li>Every design decision, and all testing on the real device</li>
+        </ul>
+      </div>
+      <div class="who a">
+        <h3>Claude</h3>
+        <ul>
+          <li>Setup scripts for the hotspot, captive portal, library and services</li>
+          <li>The portal, toolkit, comic reader, admin dashboard and back screen</li>
+          <li>Debugging along the way, from a USB SSD dropping off the bus to broken search links</li>
+        </ul>
+      </div>
+    </div>
+    <p class="note">Library content comes from <a href="https://kiwix.org">Kiwix</a> and is downloaded by the scripts, not stored in the repository. Code is MIT licensed; the PunkNuke name and logo belong to the author.</p>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>PunkNuke. No uplink required.</span>
+    <span>Built with <a href="https://claude.ai">Claude</a></span>
+  </div>
+</footer>
+
+<script>
+// Fill in the GitHub links from the Pages address (user.github.io/repo/)
+(function(){
+  var h = location.hostname, m = h.match(/^([^.]+)\.github\.io$/);
+  if (!m) return;
+  var repo = location.pathname.split("/").filter(Boolean)[0] || (m[1] + ".github.io");
+  var url = "https://github.com/" + m[1] + "/" + repo;
+  document.getElementById("repo-link").href = url;
+  document.getElementById("clone-url").textContent = url + ".git";
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,7 @@
+# Local downloads and data never belong in the repo
+*.zim
+*.zim.aria2
+*.meta4
+*.cbz
+*.log
+.DS_Store
